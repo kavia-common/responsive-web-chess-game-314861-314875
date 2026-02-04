@@ -1,7 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import Board from "./components/Board";
-import { computeCapturedPieces, createNewGame, getLegalMovesByFrom, pickAiMove } from "./chess/logic";
+import {
+  computeCapturedPieces,
+  createNewGame,
+  getAiDifficultyPresets,
+  getLegalMovesByFrom,
+  pickAiMove,
+} from "./chess/logic";
 
 const GAME_MODES = {
   HUMAN: "human",
@@ -44,6 +50,7 @@ function App() {
   const [game, setGame] = useState(() => createNewGame());
   const [mode, setMode] = useState(GAME_MODES.AI);
   const [aiSide, setAiSide] = useState(AI_SIDES.BLACK);
+  const [aiDifficulty, setAiDifficulty] = useState("medium");
   const [orientation, setOrientation] = useState("w");
 
   const [selected, setSelected] = useState(null);
@@ -60,6 +67,7 @@ function App() {
     };
   }, []);
 
+  const aiDifficultyPresets = useMemo(() => getAiDifficultyPresets(), []);
   const legalByFrom = useMemo(() => getLegalMovesByFrom(game), [game]);
   const legalToSquares = useMemo(() => {
     if (!selected) return new Set();
@@ -220,7 +228,7 @@ function App() {
 
         // If the AI has zero legal moves, the game is already over (checkmate/stalemate).
         // Do not attempt to move, but also do not leave the UI in a "thinking" state.
-        const pick = pickAiMove(next);
+        const pick = pickAiMove(next, { difficulty: aiDifficulty });
         if (!pick) {
           return;
         }
@@ -241,7 +249,7 @@ function App() {
     }, 450);
 
     return () => window.clearTimeout(t);
-  }, [game, gameOver, isAiTurn]);
+  }, [game, gameOver, isAiTurn, aiDifficulty]);
 
   // When switching mode/AI side, clear selection and promotion state (avoids confusing UI).
   useEffect(() => {
@@ -399,6 +407,23 @@ function App() {
                     >
                       <option value={AI_SIDES.BLACK}>Black</option>
                       <option value={AI_SIDES.WHITE}>White</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="aiDifficulty">AI difficulty</label>
+                    <select
+                      id="aiDifficulty"
+                      className="select"
+                      value={aiDifficulty}
+                      onChange={(e) => setAiDifficulty(e.target.value)}
+                      disabled={mode !== GAME_MODES.AI || isAiThinking}
+                    >
+                      {Object.entries(aiDifficultyPresets).map(([key, preset]) => (
+                        <option key={key} value={key}>
+                          {preset.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
