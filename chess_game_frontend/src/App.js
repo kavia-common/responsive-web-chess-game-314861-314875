@@ -79,6 +79,12 @@ function App() {
   const aiPlaysColor = isAiEnabled ? aiSide : null;
   const isAiTurn = isAiEnabled && game.turn() === aiPlaysColor;
 
+  const gameOverMessage = useMemo(() => {
+    if (!gameOver) return "";
+    // Reuse the status formatter, but make the intent explicit for the banner.
+    return statusText;
+  }, [gameOver, statusText]);
+
   const inCheckSquare = useMemo(() => {
     if (!game.inCheck()) return null;
 
@@ -212,11 +218,17 @@ function App() {
         const next = createNewGame();
         next.loadPgn(game.pgn());
 
+        // If the AI has zero legal moves, the game is already over (checkmate/stalemate).
+        // Do not attempt to move, but also do not leave the UI in a "thinking" state.
         const pick = pickAiMove(next);
-        if (!pick) return;
+        if (!pick) {
+          return;
+        }
 
         const moved = next.move({ from: pick.from, to: pick.to, promotion: pick.promotion });
-        if (!moved) return;
+        if (!moved) {
+          return;
+        }
 
         if (!isMountedRef.current) return;
         setGame(next);
@@ -273,10 +285,17 @@ function App() {
                   Check
                 </span>
               ) : null}
-              {isAiTurn || isAiThinking ? (
+              {!gameOver && (isAiTurn || isAiThinking) ? (
                 <span className="metaBadge">
                   <span className="metaDot cyan" />
                   AI thinking…
+                </span>
+              ) : null}
+
+              {gameOver ? (
+                <span className="metaBadge" aria-label="Game over badge">
+                  <span className="metaDot red" />
+                  Game over
                 </span>
               ) : null}
 
@@ -292,6 +311,25 @@ function App() {
                 </button>
               </div>
             </div>
+
+            {gameOver ? (
+              <div
+                className="note"
+                role="status"
+                aria-label="Game over message"
+                style={{
+                  marginBottom: 12,
+                  border: "1px solid rgba(239, 68, 68, 0.25)",
+                  background: "rgba(239, 68, 68, 0.06)",
+                  borderRadius: 12,
+                  padding: 12,
+                  color: "#111827",
+                }}
+              >
+                <div style={{ fontWeight: 800, marginBottom: 4 }}>Game Over</div>
+                <div>{gameOverMessage}</div>
+              </div>
+            ) : null}
 
             <div className="boardWrap">
               <Board
