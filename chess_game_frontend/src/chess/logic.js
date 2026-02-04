@@ -84,15 +84,29 @@ export function getLegalMovesByFrom(game) {
 export function computeCapturedPieces(game) {
   /**
    * Compute captured pieces by comparing start counts to current board counts.
+   *
+   * chess.js v1 does not expose `SQUARES` on the Chess instance (i.e. `game.SQUARES`),
+   * so we iterate the position via `game.board()` which is part of the public API.
+   *
    * Returns: { w: string[] unicode, b: string[] unicode }
    */
-  const start = { w: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 }, b: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 } };
-  const current = { w: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 } };
+  const start = {
+    w: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 },
+    b: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 },
+  };
 
-  for (const sq of game.SQUARES) {
-    const p = game.get(sq);
-    if (!p) continue;
-    current[p.color][p.type] += 1;
+  const current = {
+    w: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 },
+    b: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 },
+  };
+
+  // game.board() is an 8x8 matrix (rank 8 -> 1). Each entry is either null or a piece object.
+  const board = game.board();
+  for (const rank of board) {
+    for (const p of rank) {
+      if (!p) continue;
+      current[p.color][p.type] += 1;
+    }
   }
 
   const captured = { w: [], b: [] };
@@ -102,6 +116,7 @@ export function computeCapturedPieces(game) {
       for (let i = 0; i < missing; i++) captured[color].push(UNICODE[color][type]);
     }
   }
+
   return captured;
 }
 

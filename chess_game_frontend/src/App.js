@@ -81,12 +81,24 @@ function App() {
 
   const inCheckSquare = useMemo(() => {
     if (!game.inCheck()) return null;
+
     // If side to move is in check, find its king square.
+    // chess.js v1 doesn't provide `game.SQUARES` on the instance; scan via `game.board()`.
     const kingColor = game.turn();
-    for (const sq of game.SQUARES) {
-      const p = game.get(sq);
-      if (p && p.type === "k" && p.color === kingColor) return sq;
+    const board = game.board(); // [rank8..rank1][file a..h]
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const p = board[r][c];
+        if (!p) continue;
+        if (p.type === "k" && p.color === kingColor) {
+          const file = "abcdefgh"[c];
+          const rank = 8 - r;
+          return `${file}${rank}`;
+        }
+      }
     }
+
     return null;
   }, [game]);
 
