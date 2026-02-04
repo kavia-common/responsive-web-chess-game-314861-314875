@@ -269,9 +269,11 @@ button {
 /* Board */
 .board {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1; /* keeps the overall board perfectly square */
   display: grid;
   grid-template-columns: repeat(8, 1fr);
+  /* Explicit rows prevents any browser from auto-sizing tracks inconsistently */
+  grid-template-rows: repeat(8, 1fr);
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.55);
@@ -284,6 +286,17 @@ button {
   position: relative;
   display: grid;
   place-items: center;
+
+  /* Critical: make every cell a perfect square based on its computed width */
+  aspect-ratio: 1 / 1;
+
+  /* Prevent button default styles from affecting the grid sizing */
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+
   font-size: clamp(20px, 4.5vw, 44px);
   cursor: pointer;
 }
